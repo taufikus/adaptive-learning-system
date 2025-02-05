@@ -20,9 +20,9 @@ const ContentType = () => {
           if (!activeTab) return;
   
             const data = await getContent();
-            //const filteredContent = data.filter((item: ContentItem) => item.type === activeTab);
+       
             const groupedList = getTextGroupedContent(data);
-            console.log("groupedList",groupedList)
+      
             if(groupedList.length>0){
               setContentItems(groupedList);
             }

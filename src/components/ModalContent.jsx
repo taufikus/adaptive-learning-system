@@ -3,13 +3,14 @@ import { X } from 'lucide-react';
 
   const ModalContent = ({
     title,
+    engagementScore,
     closeModal,
     onOkay,
     data
   }) => {
-
+    const { item, summary } = data;
     return (
-      <div className="flex flex-col w-full max-w-md bg-white rounded-lg shadow-xl">
+      <div className="flex flex-col modal-container bg-white rounded-lg shadow-xl">
         {/* Header */}
         <div className="bg-gray-100 px-6 py-2 border-b flex justify-between items-center rounded-t-lg">
           <h2 className="text-xl font-semibold">{title}</h2>
@@ -23,20 +24,28 @@ import { X } from 'lucide-react';
   
         {/* Main Content */}
         <div className="px-6 py-4 flex-grow min-h-40 ">
-          {data &&   
+          {item &&   
           <div>
-             <p>{data.title}</p>
+             <p>{item.title}</p>
              <br></br>
-             <p>Engagement Level : <span className='font-bold text-red-500'>LOW</span></p>
+             <p>Engagement Level : <span className='font-bold text-red-500'>{engagementScore}</span></p>
              <br></br>
              <p>It seems like you're facing some difficulties in understanding given paragraph, If yes then please click below link to understand it in video format</p>
              <br></br>
              <Link to="/video" state={{ videoUrl: data.video }} >
-              <p className="text-blue-600 hover:text-blue-800 hover:underline">click here </p>
+              <p className="text-blue-600 hover:text-blue-800 hover:underline">click here to see the video </p>
              </Link>
 
           </div>
           }
+            <div>
+            {summary &&   
+              <div>
+                <p  className='font-bold'>Summary :- </p>
+                <p>{summary}</p>
+              </div>
+             }
+            </div>
         </div>
   
         {/* Footer */}
@@ -46,12 +55,6 @@ import { X } from 'lucide-react';
             className="px-4 py-2 text-white bg-red-500 rounded mr-2 hover:bg-gray-200"
           >
             Cancel
-          </button>
-          <button 
-            onClick={onOkay} 
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            OK
           </button>
         </div>
       </div>

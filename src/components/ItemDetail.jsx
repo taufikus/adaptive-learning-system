@@ -1,36 +1,58 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useParams} from 'react-router-dom';
-import Modal from "./Modal";
-import ModalContent from "./ModalContent";
 import { getContentItem } from '../services/apiServices';
-import { ArrowRight, EyeOff, View } from 'lucide-react';
+import { ArrowRight, EyeOff, View, ScanFace } from 'lucide-react';
 import WebGazerComponent from './WebGazer';
+import {getTextSummary} from '../services/llm'
 
 
-/*  <button onClick={openModal} className="px-4 py-2 bg-blue-500 text-white rounded">
-                  Open Modal
-                </button> */
 const ItemDetail = () =>{
     
   const [item, setItem] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const textContainerRef = useRef(null);
   const [coordinates, setCoordinates] = useState({});
   const[isEyeTrackingEnabled, setEyeTrackingEnabled] = useState(false);
+  const[isShowFaceBox, setShowFaceBox] = useState(true);
+  const[isShowGazeDot, setShowGazeDot] = useState(true);
 
-  const openModal = () => setIsModalOpen(true);
-  const closeModal = () => setIsModalOpen(false);
+  const [summary, setSummary] = useState('');
+
 
   const { itemId } = useParams();
 
   useEffect(() => {
-      const fetchData = async () => {
-        const result = await getContentItem(Number(itemId)); 
-        setItem(result)
+    let isMounted = true;
+  
+    const fetchData = async () => {
+      try {
+        const result = await getContentItem(Number(itemId));
+        if (isMounted) {
+          setItem(result);
+  
+          // Check if summary already exists
+          if (!summary && result.content) {
+            const summaryResult = await getTextSummary(result.content);
+            if (isMounted) {
+              setSummary(summaryResult);
+              console.log("Summary fetched:", summaryResult);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
       }
-      fetchData();
-  }, [itemId]);
+    };
+  
+    fetchData();
+  
+    return () => {
+      isMounted = false;
+    };
+  }, [itemId, summary]);
+  
 
+ 
   useEffect(() => {
     if (textContainerRef.current) {
       const rect =textContainerRef.current.getBoundingClientRect();
@@ -43,23 +65,13 @@ const ItemDetail = () =>{
         height: rect.height
       });
 
-      console.log("text-coord", rect)
+      
+      setCoordinates(rect)
     }
   }, []);
-/* TODO
-    useEffect(() => {
-      const timer = setTimeout(() => {
-        openModal();
-      }, 5000); 
-  
-      // Cleanup function
-      return () => clearTimeout(timer);
-    }, []); 
-*/
   return (
     <div>
-      <h2>{itemId}</h2>
-      <div className='bg-[#ECECEC] mx-20 rounded-xl p-5  mt-5 max-h-[34rem] overflow-y-auto' ref={textContainerRef} >
+      <div className='bg-[#ECECEC] mx-4 sm:mx-8 md:mx-12 lg:mx-20 rounded-xl p-5 mt-5 h-[85vh] overflow-y-auto' ref={textContainerRef}>
         <p className='whitespace-pre-wrap text-justify text-lg'>
           {item?.title}
           {item?.content}
@@ -73,30 +85,21 @@ const ItemDetail = () =>{
           </Link>
       </div>
       </div>
-      <div className='flex justify-center mt-5'>
-        <button onClick={() => setEyeTrackingEnabled(!isEyeTrackingEnabled)} className=' flex hover:cursor-pointer px-3 py-2 border border-transparent rounded-md shadow-sm text-white font-medium bg-slate-500'>
+      <div className='flex justify-evenly mt-5'>
+      <button onClick={() => setShowFaceBox(!isShowFaceBox)} className=' flex hover:cursor-pointer px-3 py-2 border border-transparent rounded-md shadow-sm text-white font-medium bg-slate-500'>
+          <span>{!isShowFaceBox ?  'Show' : 'Hide'} Face Visibility</span> 
+          <span className='ml-3'>{isShowFaceBox ?  <View className='text-green-200'/> : <ScanFace className='text-red-500'/> } </span> 
+        </button>
+        <button onClick={() => setShowGazeDot(!isShowGazeDot)} className=' flex hover:cursor-pointer px-3 py-2 border border-transparent rounded-md shadow-sm text-white font-medium bg-slate-500'>
+          <span>{!isShowGazeDot ?  'Show' : 'Hide'} Dot Visibility</span> 
+          <span className='ml-3'>{isShowGazeDot ?  <View className='text-green-200'/> : <ScanFace  className='text-red-500'/> } </span> 
+        </button>
+        <button onClick={() => setEyeTrackingEnabled(!isEyeTrackingEnabled)} className=' flex hover:cursor-pointer px-3 py-2 border border-transparent rounded-md shadow-sm text-white font-medium bg-green-600'>
           <span>{!isEyeTrackingEnabled ?  'Enable' : 'Disable'}  Eye Tracking</span> 
-          <span className='ml-3'>{isEyeTrackingEnabled ?  <View className='text-green-500'/> : <EyeOff className='text-red-500'/> } </span> 
+          <span className='ml-3'>{isEyeTrackingEnabled ?  <View className='text-green-200'/> : <EyeOff className='text-red-500'/> } </span> 
         </button>
       </div>
-      <div className="p-4">
-        <Modal
-          isOpen={isModalOpen}
-          onRequestClose={closeModal}
-          onAfterOpen={() => console.log('Modal opened')}
-          onAfterClose={() => console.log('Modal closed')}
-        >
-          <ModalContent
-            title=""
-            closeModal={closeModal}
-            onOkay={closeModal}
-            data={item}
-            >
-                    
-            </ModalContent>
-          </Modal>
-        </div>
-        <WebGazerComponent isEyeTrackingEnabled={isEyeTrackingEnabled}/>
+        <WebGazerComponent isEyeTrackingEnabled={isEyeTrackingEnabled}  isShowFaceBox={isShowFaceBox} isShowGazeDot={isShowGazeDot} coordinates={coordinates} item={item} summary={summary}/>
     </div>
   );
 }

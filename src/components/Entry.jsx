@@ -31,7 +31,7 @@ const Entry = () => {
           <button
             onClick={handleStartExperiment} className="inline-flex items-center justify-center px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-gradient-to-r from-blue-500 to-purple-500 hover:from-purple-500 hover:to-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-300"
           >
-            Start Experiment
+            Start Experiment 
             <LogIn className='ml-3'/>
           </button>
         </div>
